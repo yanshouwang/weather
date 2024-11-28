@@ -30,14 +30,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      routerConfig: routerConfig,
       title: 'Weather',
       theme: ThemeData(
-        colorScheme: ColorScheme.light(
+        colorScheme: const ColorScheme.light(
           surface: WeatherColors.front2,
           onSurface: WeatherColors.front1,
           primary: WeatherColors.front2,
           onPrimary: WeatherColors.front1,
-          secondary: WeatherColors.front1.withOpacity(0.6),
           outline: WeatherColors.front1,
           outlineVariant: WeatherColors.front1,
           shadow: WeatherColors.shadow,
@@ -52,6 +52,9 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
           bodyLarge: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+          bodyMedium: TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -69,7 +72,6 @@ class MyApp extends StatelessWidget {
           onSurface: WeatherColors.dr,
           primary: WeatherColors.front1,
           onPrimary: WeatherColors.dr,
-          secondary: WeatherColors.front2.withOpacity(0.3),
           outline: WeatherColors.front2.withOpacity(0.3),
           outlineVariant: WeatherColors.front2.withOpacity(0.3),
           shadow: WeatherColors.shadow,
@@ -86,6 +88,9 @@ class MyApp extends StatelessWidget {
           bodyLarge: TextStyle(
             fontWeight: FontWeight.bold,
           ),
+          bodyMedium: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
@@ -95,8 +100,10 @@ class MyApp extends StatelessWidget {
           thickness: 0.5,
         ),
       ),
-      routerConfig: routerConfig,
-      debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        scrollbars: false,
+      ),
+      debugShowCheckedModeBanner: true,
       debugShowMaterialGrid: false,
     );
   }
