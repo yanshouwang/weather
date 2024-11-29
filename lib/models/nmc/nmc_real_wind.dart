@@ -1,13 +1,13 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class RealWind {
+class NMCRealWind {
   final String direct;
   final double degree;
   final String power;
   final double speed;
 
-  RealWind({
+  NMCRealWind({
     required this.direct,
     required this.degree,
     required this.power,

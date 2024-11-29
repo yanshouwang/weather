@@ -8,7 +8,7 @@ final class HomeViewModel extends ViewModel {
   Weather? _weather;
 
   HomeViewModel()
-      : _weatherService = WeatherService.nmc(),
+      : _weatherService = WeatherService.cma(),
         _weather = null {
     updateWeather();
   }

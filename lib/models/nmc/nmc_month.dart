@@ -1,13 +1,13 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class Month {
+class NMCMonth {
   final int month;
   final double maxTemp;
   final double minTemp;
   final double precipitation;
 
-  Month({
+  NMCMonth({
     required this.month,
     required this.maxTemp,
     required this.minTemp,

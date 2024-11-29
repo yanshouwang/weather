@@ -1,16 +1,16 @@
 import 'package:json/json.dart';
 
-import 'day_night.dart';
+import 'nmc_day_night.dart';
 
 @JsonCodable()
-class Detail {
+class NMCDetail {
   final String date;
   final String pt;
-  final DayNight day;
-  final DayNight night;
+  final NMCDayNight day;
+  final NMCDayNight night;
   final double precipitation;
 
-  const Detail({
+  const NMCDetail({
     required this.date,
     required this.pt,
     required this.day,

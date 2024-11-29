@@ -1,7 +1,7 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class PassedChart {
+class NMCPassedChart {
   final double rain1h;
   final double rain24h;
   final double rain12h;
@@ -14,7 +14,7 @@ class PassedChart {
   final double windSpeed;
   final String time;
 
-  PassedChart({
+  NMCPassedChart({
     required this.rain1h,
     required this.rain24h,
     required this.rain12h,

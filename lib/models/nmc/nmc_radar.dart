@@ -1,12 +1,12 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class Radar {
+class NMCRadar {
   final String title;
   final String image;
   final String url;
 
-  Radar({
+  NMCRadar({
     required this.title,
     required this.image,
     required this.url,

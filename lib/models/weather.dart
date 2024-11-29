@@ -1,30 +1,17 @@
-import 'package:json/json.dart';
+import 'daily_weather.dart';
+import 'hourly_weather.dart';
+import 'real_weather.dart';
 
-import 'air.dart';
-import 'climate.dart';
-import 'passed_chart.dart';
-import 'predict.dart';
-import 'radar.dart';
-import 'real.dart';
-import 'temperature_chart.dart';
-
-@JsonCodable()
 class Weather {
-  final Real real;
-  final Predict predict;
-  final Air air;
-  final List<TemperatureChart> tempchart;
-  final List<PassedChart> passedchart;
-  final Climate climate;
-  final Radar radar;
+  final DateTime date;
+  final RealWeather realWeather;
+  final List<HourlyWeather> hourlyWeathers;
+  final List<DailyWeather> dailyWeathers;
 
   Weather({
-    required this.real,
-    required this.predict,
-    required this.air,
-    required this.tempchart,
-    required this.passedchart,
-    required this.climate,
-    required this.radar,
+    required this.date,
+    required this.realWeather,
+    required this.hourlyWeathers,
+    required this.dailyWeathers,
   });
 }

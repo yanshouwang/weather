@@ -36,8 +36,9 @@ class MyApp extends StatelessWidget {
         colorScheme: const ColorScheme.light(
           surface: WeatherColors.front2,
           onSurface: WeatherColors.front1,
-          primary: WeatherColors.front2,
-          onPrimary: WeatherColors.front1,
+          surfaceTint: Colors.transparent,
+          primary: WeatherColors.front1,
+          onPrimary: WeatherColors.front2,
           outline: WeatherColors.front1,
           outlineVariant: WeatherColors.front1,
           shadow: WeatherColors.shadow,
@@ -70,8 +71,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.light(
           surface: WeatherColors.front1,
           onSurface: WeatherColors.dr,
-          primary: WeatherColors.front1,
-          onPrimary: WeatherColors.dr,
+          surfaceTint: Colors.transparent,
+          primary: WeatherColors.dr,
+          onPrimary: WeatherColors.front1,
           outline: WeatherColors.front2.withOpacity(0.3),
           outlineVariant: WeatherColors.front2.withOpacity(0.3),
           shadow: WeatherColors.shadow,
