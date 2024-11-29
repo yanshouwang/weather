@@ -8,11 +8,13 @@ import 'weather_service.dart';
 
 class NMCService implements WeatherService {
   final http.Client _client;
-  final Uri _baseUri;
+  final Uri _baseUrl;
+  final Uri _corsUrl;
 
   NMCService()
       : _client = http.Client(),
-        _baseUri = Uri.http('nmc.cn');
+        _baseUrl = Uri.http('nmc.cn'),
+        _corsUrl = Uri.https('cors.hebei.dev');
 
   @override
   Future<Weather> getWeather() async {
@@ -51,17 +53,22 @@ class NMCService implements WeatherService {
 
   Future<NMCWeather> getNMCWeather() async {
     final station = await getNMCStation();
-    final uri = _baseUri.resolve('rest/weather').replace(
+    final apiurl = _baseUrl.resolve('rest/weather').replace(
       queryParameters: {
         'stationid': station.code,
       },
     );
-    final response = await _client.get(uri);
+    final url = _corsUrl.replace(
+      queryParameters: {
+        'apiurl': '$apiurl',
+      },
+    );
+    final response = await _client.get(url);
     final statusCode = response.statusCode;
     if (statusCode != 200) {
       throw http.ClientException(
         'Get NMC weather failed with statusCode $statusCode',
-        uri,
+        url,
       );
     }
     final reply = json.decode(response.body) as Map<String, Object?>;
@@ -69,7 +76,7 @@ class NMCService implements WeatherService {
     if (code != 0) {
       throw http.ClientException(
         'Get NMC weather failed with code $code',
-        uri,
+        url,
       );
     }
     final item = reply['data'] as Map<String, Object?>;
@@ -78,13 +85,18 @@ class NMCService implements WeatherService {
   }
 
   Future<NMCStation> getNMCStation() async {
-    final uri = _baseUri.resolve('rest/position');
-    final response = await _client.get(uri);
+    final apiurl = _baseUrl.resolve('rest/position');
+    final url = _corsUrl.replace(
+      queryParameters: {
+        'apiurl': '$apiurl',
+      },
+    );
+    final response = await _client.get(url);
     final statusCode = response.statusCode;
     if (statusCode != 200) {
       throw http.ClientException(
         'Get NMC station failed with statusCode $statusCode',
-        uri,
+        url,
       );
     }
     final item = json.decode(response.body) as Map<String, Object?>;

@@ -146,7 +146,7 @@ class HomeView extends StatelessWidget {
                     ),
                     const SizedBox(width: 8.0),
                     Text(
-                      '$lowest',
+                      '$lowest⁰',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],

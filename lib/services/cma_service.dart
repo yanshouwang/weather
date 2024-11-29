@@ -9,11 +9,11 @@ import 'weather_service.dart';
 
 class CMAService implements WeatherService {
   final http.Client _client;
-  final Uri _baseUri;
+  final Uri _baseUrl;
 
   CMAService()
       : _client = http.Client(),
-        _baseUri = Uri.https('weather.cma.cn');
+        _baseUrl = Uri.https('weather.cma.cn');
 
   @override
   Future<Weather> getWeather() async {
@@ -47,13 +47,13 @@ class CMAService implements WeatherService {
   }
 
   Future<CMAWeather> getCMAWeather() async {
-    final uri = _baseUri.resolve('api/weather/view');
-    final response = await _client.get(uri);
+    final url = _baseUrl.resolve('api/weather/view');
+    final response = await _client.get(url);
     final statusCode = response.statusCode;
     if (statusCode != 200) {
       throw http.ClientException(
         'Get CMA weather failed with statusCode $statusCode',
-        uri,
+        url,
       );
     }
     final reply = json.decode(response.body) as Map<String, Object?>;
@@ -61,7 +61,7 @@ class CMAService implements WeatherService {
     if (code != 0) {
       throw http.ClientException(
         'Get CMA weather failed with code $code',
-        uri,
+        url,
       );
     }
     final item = reply['data'] as Map<String, Object?>;
