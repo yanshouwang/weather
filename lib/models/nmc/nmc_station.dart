@@ -1,13 +1,13 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class Station {
+class NMCStation {
   final String code;
   final String province;
   final String city;
   final String url;
 
-  const Station({
+  const NMCStation({
     required this.code,
     required this.province,
     required this.city,

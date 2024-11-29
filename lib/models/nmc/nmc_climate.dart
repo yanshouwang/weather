@@ -1,13 +1,13 @@
 import 'package:json/json.dart';
 
-import 'month.dart';
+import 'nmc_month.dart';
 
 @JsonCodable()
-class Climate {
+class NMCClimate {
   final String time;
-  final List<Month> month;
+  final List<NMCMonth> month;
 
-  Climate({
+  NMCClimate({
     required this.time,
     required this.month,
   });

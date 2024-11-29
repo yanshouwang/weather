@@ -13,86 +13,87 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateTime.now();
-    final formatter = DateFormat.MMMEd();
-    final formattedDate = formatter.format(date);
+    final viewModel = ViewModel.of<HomeViewModel>(context);
+    final weather = viewModel.weather;
     return Material(
-      child: Row(
-        children: [
-          Expanded(
-            child: Scaffold(
-              appBar: AppBar(
-                leadingWidth: 80.0,
-                leading: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.menu_rounded),
-                  iconSize: 32.0,
-                ),
-                title: Text(formattedDate),
-                actions: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 24.0),
-                    child: Text(
-                      '⁰C',
-                      style: Theme.of(context).textTheme.titleLarge,
+      child: weather == null
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Scaffold(
+                    appBar: AppBar(
+                      leadingWidth: 80.0,
+                      leading: IconButton(
+                        onPressed: () {},
+                        icon: const Icon(Icons.menu_rounded),
+                        iconSize: 32.0,
+                      ),
+                      title: Text(weather.date.titleValue),
+                      actions: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 24.0),
+                          child: Text(
+                            '⁰C',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
+                    ),
+                    body: Container(
+                      margin: const EdgeInsets.only(
+                        left: 24.0,
+                        right: 24.0,
+                        bottom: 24.0,
+                      ),
+                      child: buildWeatherView(context, weather),
                     ),
                   ),
-                ],
-              ),
-              body: Container(
-                margin: const EdgeInsets.only(
-                  left: 24.0,
-                  right: 24.0,
-                  bottom: 24.0,
                 ),
-                child: buildWeatherView(context),
-              ),
+                Container(
+                  width: 160.0,
+                  alignment: Alignment.bottomRight,
+                  child: buildSignatureView(context),
+                ),
+              ],
             ),
-          ),
-          Container(
-            width: 160.0,
-            alignment: Alignment.bottomRight,
-            child: buildSignatureView(context),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget buildWeatherView(BuildContext context) {
-    final viewModel = ViewModel.of<HomeViewModel>(context);
-    final weather = viewModel.weather;
-    if (weather == null) {
-      // TODO: Add loading animation.
-      return Container();
-    }
-    final real = weather.real;
-    final tempchart = weather.tempchart[0];
-    final passedchart = weather.passedchart.reversed.toList();
-    final predict = weather.predict;
+  Widget buildWeatherView(BuildContext context, Weather weather) {
+    final realWeather = weather.realWeather;
+    final hourlyWeathers = weather.hourlyWeathers;
+    final dailyWeathers = weather.dailyWeathers;
     return Column(
       children: [
-        buildRealView(context, real, tempchart),
-        const Divider(),
-        SizedBox(
-          height: 60.0,
-          child: buildHoursView(context, passedchart),
-        ),
+        buildRealView(context, realWeather),
+        if (hourlyWeathers.isNotEmpty) const Divider(),
+        if (hourlyWeathers.isNotEmpty)
+          SizedBox(
+            height: 60.0,
+            child: buildHourlyView(context, hourlyWeathers),
+          ),
         const Divider(),
         Expanded(
-          child: buildWeekdaysView(context, predict),
+          child: buildDailyView(context, dailyWeathers),
         ),
       ],
     );
   }
 
-  Widget buildRealView(
-      BuildContext context, Real real, TemperatureChart tempchart) {
-    final city = real.station.city;
-    final weather = real.weather;
-    final wind = real.wind;
-    final minTemp = tempchart.min_temp;
-    final maxTemp = tempchart.max_temp;
+  Widget buildRealView(BuildContext context, RealWeather weather) {
+    final city = weather.city;
+    final temperature = weather.temperature;
+    final feels = weather.feels;
+    final lowest = weather.lowest;
+    final highest = weather.highest;
+    final windDirection = weather.windDirection;
+    final windAbbr = weather.windAbbr;
+    final windSpeed = weather.windSpeed;
+    final description = weather.description;
+    final imageAssetNumber = weather.imageAssetNumber;
     return IntrinsicHeight(
       child: Row(
         children: [
@@ -107,11 +108,11 @@ class HomeView extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 Text(
-                  '${weather.temperature}⁰',
+                  '$temperature⁰',
                   style: Theme.of(context).textTheme.displayLarge,
                 ),
                 Text(
-                  'Feels like ${weather.feelst}⁰',
+                  'Feels like $feels⁰',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 const Divider(),
@@ -129,7 +130,7 @@ class HomeView extends StatelessWidget {
                     ),
                     const SizedBox(width: 8.0),
                     Text(
-                      '$maxTemp⁰',
+                      '$highest⁰',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(width: 12.0),
@@ -145,16 +146,16 @@ class HomeView extends StatelessWidget {
                     ),
                     const SizedBox(width: 8.0),
                     Text(
-                      '$minTemp⁰',
+                      '$lowest',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
                 ),
                 const SizedBox(height: 12.0),
                 Tooltip(
-                  message: '${wind.direct} ${wind.power}',
+                  message: windDirection,
                   child: Text(
-                    '${wind.direction} ${wind.speed} m/s',
+                    '$windAbbr $windSpeed m/s',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
@@ -168,9 +169,9 @@ class HomeView extends StatelessWidget {
               maxWidth: double.infinity,
               alignment: Alignment.centerLeft,
               child: Tooltip(
-                message: weather.info,
+                message: description,
                 child: Image.asset(
-                  'images/3D Ico_${getImageAssetNumber(weather.img)}.png',
+                  'images/3D Ico_$imageAssetNumber.png',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -181,21 +182,18 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget buildHoursView(BuildContext context, List<PassedChart> passedchart) {
+  Widget buildHourlyView(BuildContext context, List<HourlyWeather> weathers) {
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      itemCount: passedchart.length,
+      itemCount: weathers.length,
       itemBuilder: (context, index) {
-        final item = passedchart[index];
-        final date = DateTime.parse(item.time);
-        final formatter = DateFormat.j();
-        final hour = formatter.format(date);
-        final temp = item.temperature;
+        final weather = weathers[index];
+        final temperature = weather.temperature;
         return Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              hour,
+              weather.date.hourValue,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context)
                         .colorScheme
@@ -204,7 +202,7 @@ class HomeView extends StatelessWidget {
                   ),
             ),
             Text(
-              '$temp⁰',
+              '$temperature⁰',
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ],
@@ -216,28 +214,26 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget buildWeekdaysView(BuildContext context, Predict predict) {
+  Widget buildDailyView(BuildContext context, List<DailyWeather> weathers) {
     return ListView.separated(
-      itemCount: predict.detail.length,
+      itemCount: weathers.length,
       itemBuilder: (context, index) {
-        final item = predict.detail[index];
-        final date = DateTime.parse(item.date);
-        final formatter = DateFormat.EEEE();
-        final weekday = formatter.format(date);
-        final day = item.day;
-        final night = item.night;
-        final dayAvailable = day.weather.info != '9999';
+        final weather = weathers[index];
+        final description = weather.description;
+        final imageAssetNumber = weather.imageAssetNumber;
+        final lowest = weather.lowest;
+        final highest = weather.highest;
         return Row(
           children: [
             Text(
-              weekday,
+              weather.date.dayVaue,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const Spacer(),
             Tooltip(
-              message: dayAvailable ? day.weather.info : night.weather.info,
+              message: description,
               child: Image.asset(
-                'images/3D Ico_${getImageAssetNumber(dayAvailable ? day.weather.img : night.weather.img, dayAvailable)}.png',
+                'images/3D Ico_$imageAssetNumber.png',
                 width: 32.0,
                 height: 32.0,
               ),
@@ -245,19 +241,16 @@ class HomeView extends StatelessWidget {
             Container(
               width: 112.0,
               alignment: Alignment.centerRight,
-              child: Visibility(
-                visible: dayAvailable,
-                child: Text(
-                  '${day.weather.temperature}⁰',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              child: Text(
+                '$highest⁰',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             Container(
               width: 28.0,
               alignment: Alignment.centerRight,
               child: Text(
-                '${night.weather.temperature}⁰',
+                '$lowest⁰',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context)
                           .colorScheme
@@ -321,63 +314,6 @@ class HomeView extends StatelessWidget {
       ),
     );
   }
-
-  String getImageAssetNumber(String img, [bool isDay = true]) {
-    // http://image.nmc.cn/static2/site/nmc/themes/basic/weather/white/day/{img}.png
-    // http://image.nmc.cn/static2/site/nmc/themes/basic/weather/white/night/{img}.png
-    switch (img) {
-      case '0':
-        return isDay ? '33' : '28';
-      case '1':
-        return isDay ? '04' : '08';
-      case '2':
-        return '01';
-      case '3':
-      case '36':
-        return isDay ? '16' : '15';
-      case '4':
-        return '13';
-      case '5':
-      case '14':
-      case '15':
-      case '16':
-      case '17':
-      case '26':
-      case '27':
-      case '28':
-      case '33':
-        return '20';
-      case '6':
-        return '27';
-      case '7':
-      case '8':
-      case '9':
-      case '10':
-      case '11':
-      case '12':
-      case '19':
-      case '21':
-      case '22':
-      case '23':
-      case '24':
-      case '25':
-        return '17';
-      case '13':
-        return isDay ? '30' : '29';
-      case '18':
-      case '32':
-        return '03';
-      case '20':
-      case '31':
-        return '24';
-      case '29':
-        return '26';
-      case '30':
-        return '23';
-      default:
-        return '36';
-    }
-  }
 }
 
 class ArrowPainter extends CustomPainter {
@@ -420,56 +356,65 @@ class ArrowPainter extends CustomPainter {
   }
 }
 
-extension on RealWind {
-  String get direction {
-    if (degree < 0 || degree >= 360) {
-      throw ArgumentError.value(degree);
+extension on RealWeather {
+  String get windAbbr {
+    final windDegree = this.windDegree;
+    if (windDegree < 0 || windDegree >= 360) {
+      throw ArgumentError.value(windDegree);
     }
-    if (degree == 0) {
+    if (windDegree == 0) {
       return 'N';
     }
-    if (degree < 45) {
+    if (windDegree < 45) {
       return 'NNE';
     }
-    if (degree == 45) {
+    if (windDegree == 45) {
       return 'NE';
     }
-    if (degree < 90) {
+    if (windDegree < 90) {
       return 'NEE';
     }
-    if (degree == 90) {
+    if (windDegree == 90) {
       return 'E';
     }
-    if (degree < 135) {
+    if (windDegree < 135) {
       return 'SEE';
     }
-    if (degree == 135) {
+    if (windDegree == 135) {
       return 'SE';
     }
-    if (degree < 180) {
+    if (windDegree < 180) {
       return 'SSE';
     }
-    if (degree == 180) {
+    if (windDegree == 180) {
       return 'S';
     }
-    if (degree < 225) {
+    if (windDegree < 225) {
       return 'SSW';
     }
-    if (degree == 225) {
+    if (windDegree == 225) {
       return 'SW';
     }
-    if (degree < 270) {
+    if (windDegree < 270) {
       return 'SWW';
     }
-    if (degree == 270) {
+    if (windDegree == 270) {
       return 'W';
     }
-    if (degree < 315) {
+    if (windDegree < 315) {
       return 'NWW';
     }
-    if (degree == 315) {
+    if (windDegree == 315) {
       return 'NW';
     }
     return 'NNW';
   }
+}
+
+extension on DateTime {
+  String get titleValue => DateFormat.MMMEd().format(this);
+
+  String get hourValue => DateFormat.j().format(this);
+
+  String get dayVaue => DateFormat.EEEE().format(this);
 }

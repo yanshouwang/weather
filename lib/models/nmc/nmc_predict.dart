@@ -1,15 +1,15 @@
 import 'package:json/json.dart';
 
-import 'detail.dart';
-import 'station.dart';
+import 'nmc_detail.dart';
+import 'nmc_station.dart';
 
 @JsonCodable()
-class Predict {
-  final Station station;
+class NMCPredict {
+  final NMCStation station;
   final String publish_time;
-  final List<Detail> detail;
+  final List<NMCDetail> detail;
 
-  const Predict({
+  const NMCPredict({
     required this.station,
     required this.publish_time,
     required this.detail,

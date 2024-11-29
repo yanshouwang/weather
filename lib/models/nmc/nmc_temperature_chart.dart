@@ -1,7 +1,7 @@
 import 'package:json/json.dart';
 
 @JsonCodable()
-class TemperatureChart {
+class NMCTemperatureChart {
   final String time;
   final double min_temp;
   final double max_temp;
@@ -10,7 +10,7 @@ class TemperatureChart {
   final String night_img;
   final String night_text;
 
-  TemperatureChart({
+  NMCTemperatureChart({
     required this.time,
     required this.min_temp,
     required this.max_temp,
