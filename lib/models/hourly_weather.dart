@@ -1,6 +1,6 @@
 class HourlyWeather {
   final DateTime date;
-  final double temperature;
+  final int temperature;
 
   HourlyWeather({
     required this.date,

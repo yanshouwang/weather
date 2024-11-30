@@ -23,27 +23,27 @@ class NMCService implements WeatherService {
       date: DateTime.parse(nmcWeather.real.publish_time),
       realWeather: RealWeather(
         city: nmcWeather.real.station.city,
-        temperature: nmcWeather.real.weather.temperature,
-        feels: nmcWeather.real.weather.feelst,
-        lowest: nmcWeather.tempchart[0].min_temp,
-        highest: nmcWeather.tempchart[0].max_temp,
-        windDirection: nmcWeather.real.wind.direct,
-        windDegree: nmcWeather.real.wind.degree,
-        windSpeed: nmcWeather.real.wind.speed,
+        state: getWeatherState(nmcWeather.real.weather.img),
         description: nmcWeather.real.weather.info,
-        imageAssetNumber: getImageAssetNumber(nmcWeather.real.weather.img),
+        temperature: nmcWeather.real.weather.temperature.toInt(),
+        feels: nmcWeather.real.weather.feelst.toInt(),
+        lowest: nmcWeather.tempchart[0].min_temp.toInt(),
+        highest: nmcWeather.tempchart[0].max_temp.toInt(),
+        windDirection: nmcWeather.real.wind.direct,
+        windDegree: nmcWeather.real.wind.degree.toInt(),
+        windSpeed: nmcWeather.real.wind.speed.toInt(),
       ),
       hourlyWeathers: nmcWeather.passedchart
           .map((i) => HourlyWeather(
                 date: DateTime.parse(i.time),
-                temperature: i.temperature,
+                temperature: i.temperature.toInt(),
               ))
           .toList(),
       dailyWeathers: nmcWeather.predict.detail
           .map((i) => DailyWeather(
                 date: DateTime.parse(i.date),
+                state: getWeatherState(i.day.weather.img),
                 description: i.day.weather.info,
-                imageAssetNumber: getImageAssetNumber(i.day.weather.img),
                 lowest: int.parse(i.night.weather.temperature),
                 highest: int.parse(i.day.weather.temperature),
               ))
@@ -103,21 +103,21 @@ class NMCService implements WeatherService {
     return NMCStation.fromJson(item);
   }
 
-  String getImageAssetNumber(String img, [bool isDay = true]) {
+  WeatherState getWeatherState(String img) {
     // http://image.nmc.cn/static2/site/nmc/themes/basic/weather/white/day/{img}.png
     // http://image.nmc.cn/static2/site/nmc/themes/basic/weather/white/night/{img}.png
     switch (img) {
       case '0':
-        return isDay ? '33' : '28';
+        return WeatherState.sunny;
       case '1':
-        return isDay ? '04' : '08';
+        return WeatherState.cloudy;
       case '2':
-        return '01';
+        return WeatherState.overcast;
       case '3':
       case '36':
-        return isDay ? '16' : '15';
+        return WeatherState.sunshower;
       case '4':
-        return '13';
+        return WeatherState.thundershower;
       case '5':
       case '14':
       case '15':
@@ -127,9 +127,9 @@ class NMCService implements WeatherService {
       case '27':
       case '28':
       case '33':
-        return '20';
+        return WeatherState.snowy;
       case '6':
-        return '27';
+        return WeatherState.sleety;
       case '7':
       case '8':
       case '9':
@@ -142,21 +142,21 @@ class NMCService implements WeatherService {
       case '23':
       case '24':
       case '25':
-        return '17';
+        return WeatherState.rainy;
       case '13':
-        return isDay ? '30' : '29';
+        return WeatherState.sunsnow;
       case '18':
       case '32':
-        return '03';
+        return WeatherState.foggy;
       case '20':
       case '31':
-        return '24';
+        return WeatherState.tornadic;
       case '29':
-        return '26';
+        return WeatherState.dewed;
       case '30':
-        return '23';
+        return WeatherState.windy;
       default:
-        return '36';
+        return WeatherState.unknown;
     }
   }
 }

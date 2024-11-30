@@ -1,0 +1,16 @@
+enum WeatherState {
+  unknown,
+  sunny,
+  cloudy,
+  overcast,
+  windy,
+  rainy,
+  thundershower,
+  sleety,
+  snowy,
+  foggy,
+  tornadic,
+  dewed,
+  sunshower,
+  sunsnow,
+}
