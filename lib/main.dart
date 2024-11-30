@@ -29,6 +29,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const fontFamily = 'RotondaC';
+    const appBarTheme = AppBarTheme(
+      centerTitle: true,
+    );
+    const textTheme = TextTheme(
+      displayLarge: TextStyle(
+        fontSize: 100.0,
+        fontWeight: FontWeight.bold,
+      ),
+      titleLarge: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+      bodyLarge: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+      bodyMedium: TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    );
+    final iconButtonTheme = IconButtonThemeData(
+      style: IconButton.styleFrom(
+        padding: EdgeInsets.zero,
+      ),
+    );
+    const dividerTheme = DividerThemeData(
+      space: 32.0,
+      thickness: 0.5,
+    );
     return MaterialApp.router(
       routerConfig: routerConfig,
       title: 'Weather',
@@ -43,32 +71,14 @@ class MyApp extends StatelessWidget {
           outlineVariant: WeatherColors.front1,
           shadow: WeatherColors.shadow,
         ),
-        fontFamily: 'RotondaC',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 120.0,
-            fontWeight: FontWeight.bold,
-          ),
-          titleLarge: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-          bodyLarge: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-          bodyMedium: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-        ),
-        dividerTheme: const DividerThemeData(
-          space: 60.0,
-          thickness: 0.5,
-        ),
+        fontFamily: fontFamily,
+        appBarTheme: appBarTheme,
+        textTheme: textTheme,
+        iconButtonTheme: iconButtonTheme,
+        dividerTheme: dividerTheme,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.light(
+        colorScheme: ColorScheme.dark(
           surface: WeatherColors.front1,
           onSurface: WeatherColors.dr,
           surfaceTint: Colors.transparent,
@@ -78,29 +88,11 @@ class MyApp extends StatelessWidget {
           outlineVariant: WeatherColors.front2.withOpacity(0.3),
           shadow: WeatherColors.shadow,
         ),
-        fontFamily: 'RotondaC',
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 120.0,
-            fontWeight: FontWeight.bold,
-          ),
-          titleLarge: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-          bodyLarge: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-          bodyMedium: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-        ),
-        dividerTheme: const DividerThemeData(
-          space: 60.0,
-          thickness: 0.5,
-        ),
+        fontFamily: fontFamily,
+        appBarTheme: appBarTheme,
+        textTheme: textTheme,
+        iconButtonTheme: iconButtonTheme,
+        dividerTheme: dividerTheme,
       ),
       scrollBehavior: const MaterialScrollBehavior().copyWith(
         scrollbars: false,

@@ -22,23 +22,23 @@ class CMAService implements WeatherService {
       date: DateTime.parse(cmaWeather.lastUpdate.replaceAll('/', '-')),
       realWeather: RealWeather(
         city: cmaWeather.location.name,
-        temperature: cmaWeather.now.temperature,
-        feels: getFeels(cmaWeather.now.temperature, cmaWeather.now.windSpeed),
-        lowest: cmaWeather.daily[0].low,
-        highest: cmaWeather.daily[0].high,
-        windDirection: cmaWeather.now.windDirection,
-        windDegree: cmaWeather.now.windDirectionDegree,
-        windSpeed: cmaWeather.now.windSpeed,
+        state: getWeatherState(cmaWeather.daily[0].dayCode),
         description: cmaWeather.daily[0].dayText,
-        imageAssetNumber: getImageAssetNumber(cmaWeather.daily[0].dayCode),
+        temperature: cmaWeather.now.temperature.toInt(),
+        feels: getFeels(cmaWeather.now.temperature, cmaWeather.now.windSpeed),
+        lowest: cmaWeather.daily[0].low.toInt(),
+        highest: cmaWeather.daily[0].high.toInt(),
+        windDirection: cmaWeather.now.windDirection,
+        windDegree: cmaWeather.now.windDirectionDegree.toInt(),
+        windSpeed: cmaWeather.now.windSpeed.toInt(),
       ),
       // CMA doesn't support hourly weathers.
       hourlyWeathers: [],
       dailyWeathers: cmaWeather.daily
           .map((i) => DailyWeather(
                 date: DateTime.parse(i.date.replaceAll('/', '-')),
+                state: getWeatherState(i.dayCode),
                 description: i.dayText,
-                imageAssetNumber: getImageAssetNumber(i.dayCode),
                 lowest: i.low.toInt(),
                 highest: i.high.toInt(),
               ))
@@ -68,27 +68,26 @@ class CMAService implements WeatherService {
     return CMAWeather.fromJson(item);
   }
 
-  double getFeels(double temperature, double windSpeed) {
+  int getFeels(double temperature, double windSpeed) {
     // 体感温度(°C)＝温度(°C)-2√风速(米/每秒)。
     final feels = temperature - 2 * math.sqrt(windSpeed);
-    final feelsValue = feels.toStringAsFixed(1);
-    return double.parse(feelsValue);
+    return feels.toInt();
   }
 
-  String getImageAssetNumber(int code, [bool isDay = true]) {
+  WeatherState getWeatherState(int code) {
     // https://weather.cma.cn/static/img/w/icon/w{code}.png
     switch (code) {
       case 0:
-        return isDay ? '33' : '28';
+        return WeatherState.sunny;
       case 1:
-        return isDay ? '04' : '08';
+        return WeatherState.cloudy;
       case 2:
-        return '01';
+        return WeatherState.overcast;
       case 3:
       case 36:
-        return isDay ? '16' : '15';
+        return WeatherState.sunshower;
       case 4:
-        return '13';
+        return WeatherState.thundershower;
       case 5:
       case 14:
       case 15:
@@ -98,9 +97,9 @@ class CMAService implements WeatherService {
       case 27:
       case 28:
       case 33:
-        return '20';
+        return WeatherState.snowy;
       case 6:
-        return '27';
+        return WeatherState.sleety;
       case 7:
       case 8:
       case 9:
@@ -113,21 +112,21 @@ class CMAService implements WeatherService {
       case 23:
       case 24:
       case 25:
-        return '17';
+        return WeatherState.rainy;
       case 13:
-        return isDay ? '30' : '29';
+        return WeatherState.sunsnow;
       case 18:
       case 32:
-        return '03';
+        return WeatherState.foggy;
       case 20:
       case 31:
-        return '24';
+        return WeatherState.tornadic;
       case 29:
-        return '26';
+        return WeatherState.dewed;
       case 30:
-        return '23';
+        return WeatherState.windy;
       default:
-        return '36';
+        return WeatherState.unknown;
     }
   }
 }

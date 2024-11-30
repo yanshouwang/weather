@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:clover/clover.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:weather/models.dart';
@@ -15,50 +16,33 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = ViewModel.of<HomeViewModel>(context);
     final weather = viewModel.weather;
-    return Material(
-      child: weather == null
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : Row(
-              children: [
-                Expanded(
-                  child: Scaffold(
-                    appBar: AppBar(
-                      leadingWidth: 80.0,
-                      leading: IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.menu_rounded),
-                        iconSize: 32.0,
-                      ),
-                      title: Text(weather.date.titleValue),
-                      actions: [
-                        Container(
-                          margin: const EdgeInsets.only(right: 24.0),
-                          child: Text(
-                            '⁰C',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                      ],
-                    ),
-                    body: Container(
-                      margin: const EdgeInsets.only(
-                        left: 24.0,
-                        right: 24.0,
-                        bottom: 24.0,
-                      ),
-                      child: buildWeatherView(context, weather),
-                    ),
+    if (weather == null) {
+      return buildLoadingView(context);
+    } else {
+      final size = MediaQuery.sizeOf(context);
+      // https://m3.material.io/foundations/layout/applying-layout/window-size-classes
+      return size.width < 600
+          ? buildWeatherView(context, weather)
+          : Material(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: buildWeatherView(context, weather),
                   ),
-                ),
-                Container(
-                  width: 160.0,
-                  alignment: Alignment.bottomRight,
-                  child: buildSignatureView(context),
-                ),
-              ],
-            ),
+                  Container(
+                    width: 160.0,
+                    alignment: Alignment.bottomRight,
+                    child: buildSignatureView(context),
+                  ),
+                ],
+              ),
+            );
+    }
+  }
+
+  Widget buildLoadingView(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(),
     );
   }
 
@@ -66,25 +50,51 @@ class HomeView extends StatelessWidget {
     final realWeather = weather.realWeather;
     final hourlyWeathers = weather.hourlyWeathers;
     final dailyWeathers = weather.dailyWeathers;
-    return Column(
-      children: [
-        buildRealView(context, realWeather),
-        if (hourlyWeathers.isNotEmpty) const Divider(),
-        if (hourlyWeathers.isNotEmpty)
-          SizedBox(
-            height: 60.0,
-            child: buildHourlyView(context, hourlyWeathers),
-          ),
-        const Divider(),
-        Expanded(
-          child: buildDailyView(context, dailyWeathers),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.menu_rounded),
         ),
-      ],
+        title: Text(weather.date.titleValue),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: Text(
+              '⁰C',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+        ],
+      ),
+      body: Container(
+        margin: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: buildRealView(context, realWeather),
+            ),
+            if (hourlyWeathers.isNotEmpty) const Divider(),
+            if (hourlyWeathers.isNotEmpty)
+              SizedBox(
+                height: 60.0,
+                child: buildHourlyView(context, hourlyWeathers),
+              ),
+            const Divider(),
+            Expanded(
+              child: buildDailyView(context, dailyWeathers),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget buildRealView(BuildContext context, RealWeather weather) {
+    final brightness = Theme.of(context).brightness;
     final city = weather.city;
+    final state = weather.state;
+    final description = weather.description;
     final temperature = weather.temperature;
     final feels = weather.feels;
     final lowest = weather.lowest;
@@ -92,93 +102,90 @@ class HomeView extends StatelessWidget {
     final windDirection = weather.windDirection;
     final windAbbr = weather.windAbbr;
     final windSpeed = weather.windSpeed;
-    final description = weather.description;
-    final imageAssetNumber = weather.imageAssetNumber;
-    return IntrinsicHeight(
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 40.0),
-                Text(
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
                   city,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                Text(
-                  '$temperature⁰',
-                  style: Theme.of(context).textTheme.displayLarge,
-                ),
-                Text(
-                  'Feels like $feels⁰',
+              ),
+              Text(
+                '$temperature⁰',
+                style: Theme.of(context).textTheme.displayLarge,
+              ),
+              Text(
+                'Feels like $feels⁰',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              const Divider(),
+              Row(
+                children: [
+                  CustomPaint(
+                    size: const Size.square(12.0),
+                    painter: ArrowPainter(
+                      rotationDegrees: 0.0,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    '$highest⁰',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(width: 12.0),
+                  CustomPaint(
+                    size: const Size.square(12.0),
+                    painter: ArrowPainter(
+                      rotationDegrees: 180.0,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    '$lowest⁰',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
+              ),
+              Tooltip(
+                message: windDirection,
+                child: Text(
+                  '$windAbbr $windSpeed m/s',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                const Divider(),
-                Row(
-                  children: [
-                    CustomPaint(
-                      size: const Size.square(12.0),
-                      painter: ArrowPainter(
-                        rotationDegrees: 0.0,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Text(
-                      '$highest⁰',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(width: 12.0),
-                    CustomPaint(
-                      size: const Size.square(12.0),
-                      painter: ArrowPainter(
-                        rotationDegrees: 180.0,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.6),
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                    Text(
-                      '$lowest⁰',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12.0),
-                Tooltip(
-                  message: windDirection,
-                  child: Text(
-                    '$windAbbr $windSpeed m/s',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 24.0),
-          AspectRatio(
-            aspectRatio: 0.7,
-            child: OverflowBox(
-              maxWidth: double.infinity,
-              alignment: Alignment.centerLeft,
-              child: Tooltip(
-                message: description,
-                child: Image.asset(
-                  'images/3D Ico_$imageAssetNumber.png',
-                  fit: BoxFit.cover,
-                ),
+        ),
+        const SizedBox(width: 8.0),
+        AspectRatio(
+          aspectRatio: 0.64,
+          child: OverflowBox(
+            maxWidth: double.infinity,
+            alignment: Alignment.centerLeft,
+            child: Tooltip(
+              message: description,
+              child: SvgPicture.asset(
+                getAssetName(state, brightness),
+                alignment: Alignment.centerLeft,
+                fit: BoxFit.fitHeight,
+                clipBehavior: Clip.none,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -209,18 +216,19 @@ class HomeView extends StatelessWidget {
         );
       },
       separatorBuilder: (context, index) {
-        return const SizedBox(width: 32.0);
+        return const SizedBox(width: 40.0);
       },
     );
   }
 
   Widget buildDailyView(BuildContext context, List<DailyWeather> weathers) {
+    final brightness = Theme.of(context).brightness;
     return ListView.separated(
       itemCount: weathers.length,
       itemBuilder: (context, index) {
         final weather = weathers[index];
+        final state = weather.state;
         final description = weather.description;
-        final imageAssetNumber = weather.imageAssetNumber;
         final lowest = weather.lowest;
         final highest = weather.highest;
         return Row(
@@ -232,8 +240,8 @@ class HomeView extends StatelessWidget {
             const Spacer(),
             Tooltip(
               message: description,
-              child: Image.asset(
-                'images/3D Ico_$imageAssetNumber.png',
+              child: SvgPicture.asset(
+                getAssetName(state, brightness),
                 width: 32.0,
                 height: 32.0,
               ),
@@ -263,7 +271,7 @@ class HomeView extends StatelessWidget {
         );
       },
       separatorBuilder: (context, index) {
-        return const SizedBox(height: 32.0);
+        return const SizedBox(height: 16.0);
       },
     );
   }
@@ -314,6 +322,45 @@ class HomeView extends StatelessWidget {
       ),
     );
   }
+
+  String getAssetName(WeatherState state, Brightness brightness) {
+    final number = getAssetNumber(state, brightness);
+    return 'images/3D Ico_$number.svg';
+  }
+
+  String getAssetNumber(WeatherState state, Brightness brightness) {
+    final isDay = brightness == Brightness.light;
+    switch (state) {
+      case WeatherState.unknown:
+        return '36';
+      case WeatherState.sunny:
+        return isDay ? '33' : '28';
+      case WeatherState.cloudy:
+        return isDay ? '04' : '08';
+      case WeatherState.overcast:
+        return '01';
+      case WeatherState.windy:
+        return '23';
+      case WeatherState.rainy:
+        return '17';
+      case WeatherState.thundershower:
+        return '13';
+      case WeatherState.sleety:
+        return '27';
+      case WeatherState.snowy:
+        return '20';
+      case WeatherState.foggy:
+        return '03';
+      case WeatherState.tornadic:
+        return '24';
+      case WeatherState.dewed:
+        return '26';
+      case WeatherState.sunshower:
+        return isDay ? '16' : '15';
+      case WeatherState.sunsnow:
+        return isDay ? '30' : '29';
+    }
+  }
 }
 
 class ArrowPainter extends CustomPainter {
@@ -360,7 +407,7 @@ extension on RealWeather {
   String get windAbbr {
     final windDegree = this.windDegree;
     if (windDegree < 0 || windDegree >= 360) {
-      throw ArgumentError.value(windDegree);
+      return '$windDegree';
     }
     if (windDegree == 0) {
       return 'N';

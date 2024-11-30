@@ -1,17 +1,21 @@
+import 'weather_state.dart';
+
 class RealWeather {
   final String city;
-  final double temperature;
-  final double feels;
-  final double lowest;
-  final double highest;
-  final String windDirection;
-  final double windDegree;
-  final double windSpeed;
+  final WeatherState state;
   final String description;
-  final String imageAssetNumber;
+  final int temperature;
+  final int feels;
+  final int lowest;
+  final int highest;
+  final String windDirection;
+  final int windDegree;
+  final int windSpeed;
 
   RealWeather({
     required this.city,
+    required this.state,
+    required this.description,
     required this.temperature,
     required this.feels,
     required this.lowest,
@@ -19,7 +23,5 @@ class RealWeather {
     required this.windDirection,
     required this.windDegree,
     required this.windSpeed,
-    required this.description,
-    required this.imageAssetNumber,
   });
 }
