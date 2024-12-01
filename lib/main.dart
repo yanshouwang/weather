@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
     );
     const textTheme = TextTheme(
       displayLarge: TextStyle(
-        fontSize: 100.0,
+        fontSize: 120.0,
         fontWeight: FontWeight.bold,
       ),
       titleLarge: TextStyle(
@@ -54,8 +54,10 @@ class MyApp extends StatelessWidget {
       ),
     );
     const dividerTheme = DividerThemeData(
-      space: 32.0,
+      space: 44.0,
       thickness: 0.5,
+      indent: 16.0,
+      endIndent: 16.0,
     );
     return MaterialApp.router(
       routerConfig: routerConfig,

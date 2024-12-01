@@ -16,76 +16,97 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = ViewModel.of<HomeViewModel>(context);
     final weather = viewModel.weather;
-    if (weather == null) {
-      return buildLoadingView(context);
-    } else {
-      final size = MediaQuery.sizeOf(context);
-      // https://m3.material.io/foundations/layout/applying-layout/window-size-classes
-      return size.width < 600
-          ? buildWeatherView(context, weather)
-          : Material(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: buildWeatherView(context, weather),
-                  ),
-                  Container(
-                    width: 160.0,
-                    alignment: Alignment.bottomRight,
-                    child: buildSignatureView(context),
-                  ),
-                ],
-              ),
-            );
-    }
-  }
-
-  Widget buildLoadingView(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Material(
+      child: Center(
+        child: weather == null
+            ? buildLoadingView(context)
+            : buildWeatherView(context, weather),
+      ),
     );
   }
 
+  Widget buildLoadingView(BuildContext context) {
+    return const CircularProgressIndicator();
+  }
+
   Widget buildWeatherView(BuildContext context, Weather weather) {
+    // https://m3.material.io/foundations/layout/applying-layout/window-size-classes
+    final size = MediaQuery.sizeOf(context);
+    if (size.width < 400) {
+      return buildMiniumWeatherView(context, weather);
+    } else {
+      return buildMaximumWeatherView(context, weather);
+    }
+  }
+
+  Widget buildMiniumWeatherView(BuildContext context, Weather weather) {
+    final brightness = Theme.of(context).brightness;
+    final state = weather.realWeather.state;
+    return FractionallySizedBox(
+      widthFactor: 0.5,
+      heightFactor: 0.5,
+      child: SvgPicture.asset(
+        getAssetName(state, brightness),
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget buildMaximumWeatherView(BuildContext context, Weather weather) {
     final realWeather = weather.realWeather;
-    final hourlyWeathers = weather.hourlyWeathers;
+    final hourlyWeathers = weather.hourlyWeathers.reversed.toList();
     final dailyWeathers = weather.dailyWeathers;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.menu_rounded),
-        ),
-        title: Text(weather.date.titleValue),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Text(
-              '⁰C',
-              style: Theme.of(context).textTheme.titleLarge,
+    const size = Size.fromHeight(520.0);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      constraints: const BoxConstraints(
+        maxWidth: 600.0,
+        maxHeight: 800.0,
+      ),
+      child: CustomScrollView(
+        clipBehavior: Clip.none,
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            leading: IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.menu_rounded),
+            ),
+            title: Text(weather.date.titleValue),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: Text(
+                  '⁰C',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: size,
+              child: SizedBox.fromSize(
+                size: size,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: buildRealView(context, realWeather),
+                    ),
+                    if (hourlyWeathers.isNotEmpty) const Divider(),
+                    if (hourlyWeathers.isNotEmpty)
+                      buildHourlyView(context, hourlyWeathers),
+                    const Divider(),
+                  ],
+                ),
+              ),
             ),
           ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+            ),
+            sliver: buildDailyView(context, dailyWeathers),
+          ),
         ],
-      ),
-      body: Container(
-        margin: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: buildRealView(context, realWeather),
-            ),
-            if (hourlyWeathers.isNotEmpty) const Divider(),
-            if (hourlyWeathers.isNotEmpty)
-              SizedBox(
-                height: 60.0,
-                child: buildHourlyView(context, hourlyWeathers),
-              ),
-            const Divider(),
-            Expanded(
-              child: buildDailyView(context, dailyWeathers),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -109,78 +130,104 @@ class HomeView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  city,
-                  style: Theme.of(context).textTheme.titleLarge,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            city,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$temperature⁰',
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
+                      Text(
+                        'Feels like $feels⁰',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Text(
-                '$temperature⁰',
-                style: Theme.of(context).textTheme.displayLarge,
-              ),
-              Text(
-                'Feels like $feels⁰',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
               const Divider(),
-              Row(
-                children: [
-                  CustomPaint(
-                    size: const Size.square(12.0),
-                    painter: ArrowPainter(
-                      rotationDegrees: 0.0,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
+              Container(
+                height: 80.0,
+                margin: const EdgeInsets.only(left: 16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CustomPaint(
+                          size: const Size.square(12.0),
+                          painter: ArrowPainter(
+                            rotationDegrees: 0.0,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        Text(
+                          '$highest⁰',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(width: 12.0),
+                        CustomPaint(
+                          size: const Size.square(12.0),
+                          painter: ArrowPainter(
+                            rotationDegrees: 180.0,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
+                          ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        Text(
+                          '$lowest⁰',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Text(
-                    '$highest⁰',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(width: 12.0),
-                  CustomPaint(
-                    size: const Size.square(12.0),
-                    painter: ArrowPainter(
-                      rotationDegrees: 180.0,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
+                    Tooltip(
+                      message: windDirection,
+                      child: Text(
+                        '$windAbbr $windSpeed m/s',
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Text(
-                    '$lowest⁰',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ],
-              ),
-              Tooltip(
-                message: windDirection,
-                child: Text(
-                  '$windAbbr $windSpeed m/s',
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  ],
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8.0),
-        AspectRatio(
-          aspectRatio: 0.64,
-          child: OverflowBox(
-            maxWidth: double.infinity,
-            alignment: Alignment.centerLeft,
-            child: Tooltip(
-              message: description,
-              child: SvgPicture.asset(
-                getAssetName(state, brightness),
-                alignment: Alignment.centerLeft,
-                fit: BoxFit.fitHeight,
-                clipBehavior: Clip.none,
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: AspectRatio(
+            aspectRatio: 0.64,
+            child: OverflowBox(
+              maxWidth: double.infinity,
+              alignment: Alignment.centerLeft,
+              child: Tooltip(
+                message: description,
+                child: SvgPicture.asset(
+                  getAssetName(state, brightness),
+                  alignment: Alignment.centerLeft,
+                  fit: BoxFit.fitHeight,
+                  clipBehavior: Clip.none,
+                ),
               ),
             ),
           ),
@@ -190,40 +237,52 @@ class HomeView extends StatelessWidget {
   }
 
   Widget buildHourlyView(BuildContext context, List<HourlyWeather> weathers) {
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: weathers.length,
-      itemBuilder: (context, index) {
-        final weather = weathers[index];
-        final temperature = weather.temperature;
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              weather.date.hourValue,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.6),
-                  ),
+    return SizedBox(
+      height: 60.0,
+      child: PageView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: (weathers.length / 5).ceil(),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(
+                5,
+                (i) => weathers.skip(index * 5).elementAtOrNull(i),
+              ).map((weather) {
+                if (weather == null) {
+                  return Container();
+                }
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      weather.date.hourValue,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
+                          ),
+                    ),
+                    Text(
+                      '${weather.temperature}⁰',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
-            Text(
-              '$temperature⁰',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ],
-        );
-      },
-      separatorBuilder: (context, index) {
-        return const SizedBox(width: 40.0);
-      },
+          );
+        },
+      ),
     );
   }
 
   Widget buildDailyView(BuildContext context, List<DailyWeather> weathers) {
     final brightness = Theme.of(context).brightness;
-    return ListView.separated(
+    return SliverList.separated(
       itemCount: weathers.length,
       itemBuilder: (context, index) {
         final weather = weathers[index];
@@ -271,11 +330,12 @@ class HomeView extends StatelessWidget {
         );
       },
       separatorBuilder: (context, index) {
-        return const SizedBox(height: 16.0);
+        return const SizedBox(height: 32.0);
       },
     );
   }
 
+  // TODO: Add signature.
   Widget buildSignatureView(BuildContext context) {
     return FractionalTranslation(
       translation: const Offset(0.5, 0.5),
