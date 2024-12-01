@@ -67,7 +67,6 @@ class HomeView extends StatelessWidget {
         clipBehavior: Clip.none,
         slivers: [
           SliverAppBar(
-            pinned: true,
             leading: IconButton(
               onPressed: () {},
               icon: const Icon(Icons.menu_rounded),
@@ -99,6 +98,7 @@ class HomeView extends StatelessWidget {
                 ),
               ),
             ),
+            pinned: true,
           ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(
@@ -302,7 +302,6 @@ class HomeView extends StatelessWidget {
               child: SvgPicture.asset(
                 getAssetName(state, brightness),
                 width: 32.0,
-                height: 32.0,
               ),
             ),
             Container(
