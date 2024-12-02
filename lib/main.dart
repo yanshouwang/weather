@@ -51,10 +51,11 @@ class MyApp extends StatelessWidget {
     final iconButtonTheme = IconButtonThemeData(
       style: IconButton.styleFrom(
         padding: EdgeInsets.zero,
+        minimumSize: const Size.square(56.0),
       ),
     );
     const dividerTheme = DividerThemeData(
-      space: 44.0,
+      space: 0.5,
       thickness: 0.5,
       indent: 16.0,
       endIndent: 16.0,
