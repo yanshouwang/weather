@@ -9,6 +9,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:weather/models.dart';
 import 'package:weather/view_models.dart';
 
+const _kNormalWidth = 320.0;
+const _kTitleViewHeight = 80.0;
+const _kSpacing = 28.0;
+const _kDesignWidth = 420.0;
+const _kDesignHeight = _kDesignWidth * 2.0;
+
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
@@ -17,6 +23,7 @@ class HomeView extends StatelessWidget {
     final viewModel = ViewModel.of<HomeViewModel>(context);
     final weather = viewModel.weather;
     return Material(
+      color: Theme.of(context).colorScheme.onSurface,
       child: Center(
         child: weather == null
             ? buildLoadingView(context)
@@ -32,10 +39,10 @@ class HomeView extends StatelessWidget {
   Widget buildWeatherView(BuildContext context, Weather weather) {
     // https://m3.material.io/foundations/layout/applying-layout/window-size-classes
     final size = MediaQuery.sizeOf(context);
-    if (size.width < 400) {
+    if (size.width < _kNormalWidth) {
       return buildMiniumWeatherView(context, weather);
     } else {
-      return buildMaximumWeatherView(context, weather);
+      return buildNormalWeatherView(context, weather);
     }
   }
 
@@ -52,62 +59,68 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget buildMaximumWeatherView(BuildContext context, Weather weather) {
+  Widget buildNormalWeatherView(BuildContext context, Weather weather) {
     final realWeather = weather.realWeather;
     final hourlyWeathers = weather.hourlyWeathers.reversed.toList();
     final dailyWeathers = weather.dailyWeathers;
-    const size = Size.fromHeight(520.0);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16.0),
+    final size = MediaQuery.sizeOf(context);
+    debugPrint('totalSize: $size');
+    return ConstrainedBox(
       constraints: const BoxConstraints(
-        maxWidth: 600.0,
-        maxHeight: 800.0,
+        maxWidth: _kDesignWidth,
+        maxHeight: _kDesignHeight,
       ),
-      child: CustomScrollView(
-        clipBehavior: Clip.none,
-        slivers: [
-          SliverAppBar(
-            leading: IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.menu_rounded),
-            ),
-            title: Text(weather.date.titleValue),
-            actions: [
-              IconButton(
-                onPressed: () {},
-                icon: Text(
-                  '⁰C',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+      child: ClipPath(
+        clipper: ScaffoldClipper(
+          totalSize: size,
+        ),
+        child: Scaffold(
+          body: CustomScrollView(
+            clipBehavior: Clip.none,
+            slivers: [
+              buildTitleView(context, weather),
+              buildRealView(context, realWeather),
+              const PinnedHeaderSliver(
+                child: Divider(),
               ),
+              buildHourlyView(context, hourlyWeathers),
+              const PinnedHeaderSliver(
+                child: Divider(),
+              ),
+              buildDailyView(context, dailyWeathers),
             ],
-            bottom: PreferredSize(
-              preferredSize: size,
-              child: SizedBox.fromSize(
-                size: size,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: buildRealView(context, realWeather),
-                    ),
-                    if (hourlyWeathers.isNotEmpty) const Divider(),
-                    if (hourlyWeathers.isNotEmpty)
-                      buildHourlyView(context, hourlyWeathers),
-                    const Divider(),
-                  ],
-                ),
-              ),
-            ),
-            pinned: true,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-            ),
-            sliver: buildDailyView(context, dailyWeathers),
+          drawer: Drawer(
+            child: buildSignatureView(context),
           ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget buildTitleView(BuildContext context, Weather weather) {
+    return SliverAppBar(
+      toolbarHeight: _kTitleViewHeight,
+      leadingWidth: _kTitleViewHeight,
+      leading: const UnconstrainedBox(
+        child: DrawerButton(),
+      ),
+      title: Text(weather.date.titleValue),
+      actions: [
+        Container(
+          width: _kTitleViewHeight,
+          height: _kTitleViewHeight,
+          alignment: Alignment.center,
+          child: IconButton(
+            onPressed: () {},
+            icon: Text(
+              '⁰C',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+        ),
+      ],
+      pinned: true,
     );
   }
 
@@ -123,260 +136,304 @@ class HomeView extends StatelessWidget {
     final windDirection = weather.windDirection;
     final windAbbr = weather.windAbbr;
     final windSpeed = weather.windSpeed;
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            city,
-                            style: Theme.of(context).textTheme.titleLarge,
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 384.0,
+        color: Theme.of(context).colorScheme.surface,
+        child: Row(
+          children: [
+            IntrinsicWidth(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: _kSpacing,
+                        bottom: _kSpacing,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                city,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                            ),
                           ),
-                        ),
+                          Text(
+                            '$temperature⁰',
+                            style: Theme.of(context).textTheme.displayLarge,
+                          ),
+                          Text(
+                            'Feels like $feels⁰',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ],
                       ),
-                      Text(
-                        '$temperature⁰',
-                        style: Theme.of(context).textTheme.displayLarge,
-                      ),
-                      Text(
-                        'Feels like $feels⁰',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const Divider(),
-              Container(
-                height: 80.0,
-                margin: const EdgeInsets.only(left: 16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  const Divider(),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      left: _kSpacing,
+                      top: _kSpacing,
+                      bottom: _kSpacing,
+                    ),
+                    height: 64.0,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CustomPaint(
-                          size: const Size.square(12.0),
-                          painter: ArrowPainter(
-                            rotationDegrees: 0.0,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.6),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CustomPaint(
+                              size: const Size.square(12.0),
+                              painter: ArrowPainter(
+                                rotationDegrees: 0.0,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              '$highest⁰',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(width: 12.0),
+                            CustomPaint(
+                              size: const Size.square(12.0),
+                              painter: ArrowPainter(
+                                rotationDegrees: 180.0,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(width: 8.0),
+                            Text(
+                              '$lowest⁰',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                          ],
+                        ),
+                        Tooltip(
+                          message: windDirection,
+                          child: Text(
+                            '$windAbbr $windSpeed m/s',
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Text(
-                          '$highest⁰',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(width: 12.0),
-                        CustomPaint(
-                          size: const Size.square(12.0),
-                          painter: ArrowPainter(
-                            rotationDegrees: 180.0,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.6),
-                          ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Text(
-                          '$lowest⁰',
-                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ],
                     ),
-                    Tooltip(
-                      message: windDirection,
-                      child: Text(
-                        '$windAbbr $windSpeed m/s',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: AspectRatio(
-            aspectRatio: 0.64,
-            child: OverflowBox(
-              maxWidth: double.infinity,
-              alignment: Alignment.centerLeft,
-              child: Tooltip(
-                message: description,
-                child: SvgPicture.asset(
-                  getAssetName(state, brightness),
+            ),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.only(
+                  left: 8.0,
+                  top: 8.0,
+                  bottom: _kSpacing,
+                ),
+                constraints: const BoxConstraints.expand(),
+                child: OverflowBox(
+                  maxWidth: double.infinity,
                   alignment: Alignment.centerLeft,
-                  fit: BoxFit.fitHeight,
-                  clipBehavior: Clip.none,
+                  child: Tooltip(
+                    message: description,
+                    child: SvgPicture.asset(
+                      getAssetName(state, brightness),
+                      alignment: Alignment.centerLeft,
+                      fit: BoxFit.fitHeight,
+                      clipBehavior: Clip.none,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget buildHourlyView(BuildContext context, List<HourlyWeather> weathers) {
-    return SizedBox(
-      height: 60.0,
-      child: PageView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: (weathers.length / 5).ceil(),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(
-                5,
-                (i) => weathers.skip(index * 5).elementAtOrNull(i),
-              ).map((weather) {
-                if (weather == null) {
-                  return Container();
-                }
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      weather.date.hourValue,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.6),
-                          ),
-                    ),
-                    Text(
-                      '${weather.temperature}⁰',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          );
-        },
+    return PinnedHeaderSliver(
+      child: Container(
+        height: 112.0,
+        color: Theme.of(context).colorScheme.surface,
+        child: PageView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: (weathers.length / 5).ceil(),
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.all(_kSpacing),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(
+                  5,
+                  (i) => weathers.skip(index * 5).elementAtOrNull(i),
+                ).map((weather) {
+                  if (weather == null) {
+                    return Container();
+                  }
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        weather.date.hourValue,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6),
+                            ),
+                      ),
+                      Text(
+                        '${weather.temperature}⁰',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget buildDailyView(BuildContext context, List<DailyWeather> weathers) {
     final brightness = Theme.of(context).brightness;
-    return SliverList.separated(
-      itemCount: weathers.length,
-      itemBuilder: (context, index) {
-        final weather = weathers[index];
-        final state = weather.state;
-        final description = weather.description;
-        final lowest = weather.lowest;
-        final highest = weather.highest;
-        return Row(
-          children: [
-            Text(
-              weather.date.dayVaue,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const Spacer(),
-            Tooltip(
-              message: description,
-              child: SvgPicture.asset(
-                getAssetName(state, brightness),
-                width: 32.0,
-              ),
-            ),
-            Container(
-              width: 112.0,
-              alignment: Alignment.centerRight,
-              child: Text(
-                '$highest⁰',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-            ),
-            Container(
-              width: 28.0,
-              alignment: Alignment.centerRight,
-              child: Text(
-                '$lowest⁰',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.6),
+    return DecoratedSliver(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+      ),
+      sliver: SliverPadding(
+        padding: const EdgeInsets.all(_kSpacing),
+        sliver: SliverList.separated(
+          itemCount: weathers.length,
+          itemBuilder: (context, index) {
+            final weather = weathers[index];
+            final state = weather.state;
+            final description = weather.description;
+            final lowest = weather.lowest;
+            final highest = weather.highest;
+            return Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    weather.date.dayVaue,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                Tooltip(
+                  message: description,
+                  child: SvgPicture.asset(
+                    getAssetName(state, brightness),
+                    width: 32.0,
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '$highest⁰',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
-              ),
-            ),
-          ],
-        );
-      },
-      separatorBuilder: (context, index) {
-        return const SizedBox(height: 32.0);
-      },
+                  ),
+                ),
+                Container(
+                  width: 28.0,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '$lowest⁰',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
+                        ),
+                  ),
+                ),
+              ],
+            );
+          },
+          separatorBuilder: (context, index) {
+            return const SizedBox(height: 32.0);
+          },
+        ),
+      ),
     );
   }
 
-  // TODO: Add signature.
   Widget buildSignatureView(BuildContext context) {
-    return FractionalTranslation(
-      translation: const Offset(0.5, 0.5),
-      child: Transform.rotate(
-        alignment: Alignment.topLeft,
-        angle: -math.pi / 2,
-        child: Text.rich(
-          TextSpan(
-            children: [
-              const TextSpan(
-                text: 'DESIGNED BY ',
-              ),
-              TextSpan(
-                text: 'Ochakov',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      decoration: TextDecoration.underline,
-                    ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    final url = Uri.https('figma.com', '/@ochakov');
-                    launchUrl(url);
-                  },
-              ),
-              const TextSpan(
-                text: '\n',
-              ),
-              const TextSpan(
-                text: 'POWERED BY ',
-              ),
-              TextSpan(
-                text: 'Flutter',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      decoration: TextDecoration.underline,
-                    ),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    final url = Uri.https('flutter.dev');
-                    launchUrl(url);
-                  },
-              ),
-            ],
-          ),
+    return Container(
+      margin: const EdgeInsets.all(_kSpacing),
+      alignment: Alignment.bottomLeft,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(
+              text: 'DESIGNED BY ',
+            ),
+            TextSpan(
+              text: 'Ochakov',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    decoration: TextDecoration.underline,
+                  ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  final url = Uri.https('figma.com', '/@ochakov');
+                  launchUrl(url);
+                },
+            ),
+            const TextSpan(
+              text: '\n',
+            ),
+            const TextSpan(
+              text: 'POWERED BY ',
+            ),
+            TextSpan(
+              text: 'Flutter',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    decoration: TextDecoration.underline,
+                  ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  final url = Uri.https('flutter.dev');
+                  launchUrl(url);
+                },
+            ),
+            const TextSpan(
+              text: '\n',
+            ),
+            const TextSpan(
+              text: 'Hosted BY ',
+            ),
+            TextSpan(
+              text: 'Cloudflare',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    decoration: TextDecoration.underline,
+                  ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  final url = Uri.https('cloudflare.com');
+                  launchUrl(url);
+                },
+            ),
+          ],
         ),
       ),
     );
@@ -419,6 +476,62 @@ class HomeView extends StatelessWidget {
       case WeatherState.sunsnow:
         return isDay ? '30' : '29';
     }
+  }
+}
+
+class ScaffoldClipper extends CustomClipper<Path> {
+  final Size totalSize;
+
+  ScaffoldClipper({
+    required this.totalSize,
+  });
+
+  @override
+  Path getClip(Size size) {
+    final w = (totalSize.width - size.width) / 2.0;
+    if (totalSize.width > size.width && totalSize.height > size.height) {
+      const r = 16.0;
+      return Path()
+        ..moveTo(0.0, r)
+        ..arcToPoint(
+          const Offset(r, 0.0),
+          radius: const Radius.circular(r),
+        )
+        ..lineTo(size.width - r, 0.0)
+        ..arcToPoint(
+          Offset(size.width, r),
+          radius: const Radius.circular(r),
+        )
+        ..lineTo(size.width, r)
+        ..lineTo(size.width, _kTitleViewHeight)
+        ..lineTo(size.width + w, _kTitleViewHeight)
+        ..lineTo(size.width + w, size.height - r)
+        ..lineTo(size.width, size.height - r)
+        ..arcToPoint(
+          Offset(size.width - r, size.height),
+          radius: const Radius.circular(r),
+        )
+        ..lineTo(r, size.height)
+        ..arcToPoint(
+          Offset(0.0, size.height - r),
+          radius: const Radius.circular(r),
+        )
+        ..close();
+    } else {
+      return Path()
+        ..moveTo(0.0, 0.0)
+        ..lineTo(size.width, 0.0)
+        ..lineTo(size.width, _kTitleViewHeight)
+        ..lineTo(size.width + w, _kTitleViewHeight)
+        ..lineTo(size.width + w, size.height)
+        ..lineTo(0.0, size.height)
+        ..close();
+    }
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper oldClipper) {
+    return oldClipper is! ScaffoldClipper || oldClipper.totalSize != totalSize;
   }
 }
 
