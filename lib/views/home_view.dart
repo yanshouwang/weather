@@ -420,7 +420,7 @@ class HomeView extends StatelessWidget {
               text: '\n',
             ),
             const TextSpan(
-              text: 'Hosted BY ',
+              text: 'HOSTED BY ',
             ),
             TextSpan(
               text: 'Cloudflare',
