@@ -1,16 +1,22 @@
 # weather
 
-A new Flutter project.
+What's the weather like today?
 
-## Getting Started
+## Screenshots
 
-This project is a starting point for a Flutter application.
+![light][1]
+![dark][2]
 
-A few resources to get you started if this is your first Flutter project:
+## Thanks
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+DESIGNED BY [Ochakov][3]
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+POWERED BY [Flutter][4]
+
+HOSTED BY [Cloudflare][5]
+
+[1]: screenshots/light.png
+[2]: screenshots/dark.png
+[3]: https://figma.com/@ochakov
+[4]: https://flutter.dev
+[5]: https://cloudflare.com
